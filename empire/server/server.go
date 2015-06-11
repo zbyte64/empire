@@ -46,6 +46,7 @@ func New(e *empire.Empire, options Options) http.Handler {
 
 	// Mount health endpoint
 	r.Handle("/health", NewHealthHandler(e))
+	r.NotFoundHandler = h
 
 	return middleware.Common(r, middleware.CommonOpts{
 		Reporter: e.Reporter,

@@ -46,15 +46,23 @@ func (h *GetRelease) ServeHTTPContext(ctx context.Context, w http.ResponseWriter
 		return err
 	}
 
+	var rel *empire.Release
 	vars := httpx.Vars(ctx)
-	vers, err := strconv.Atoi(vars["version"])
-	if err != nil {
-		return err
-	}
+	if vars["version"] == "current" {
+		rel, err = h.ReleasesLast(a)
+		if err != nil {
+			return err
+		}
+	} else {
+		vers, err := strconv.Atoi(vars["version"])
+		if err != nil {
+			return err
+		}
 
-	rel, err := h.ReleasesFindByAppAndVersion(a, vers)
-	if err != nil {
-		return err
+		rel, err = h.ReleasesFindByAppAndVersion(a, vers)
+		if err != nil {
+			return err
+		}
 	}
 
 	w.WriteHeader(200)
