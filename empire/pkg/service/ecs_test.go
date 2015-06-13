@@ -13,7 +13,7 @@ import (
 )
 
 func TestECSManager_Submit(t *testing.T) {
-	h := awsutil.NewHandler([]awsutil.Cycle{
+	h := awsutil.NewHandler(t, []awsutil.Cycle{
 		awsutil.Cycle{
 			Request: awsutil.Request{
 				RequestURI: "/",
@@ -83,7 +83,7 @@ func TestECSManager_Submit(t *testing.T) {
 }
 
 func TestECSManager_Scale(t *testing.T) {
-	h := awsutil.NewHandler([]awsutil.Cycle{
+	h := awsutil.NewHandler(t, []awsutil.Cycle{
 		awsutil.Cycle{
 			Request: awsutil.Request{
 				RequestURI: "/",
@@ -105,7 +105,7 @@ func TestECSManager_Scale(t *testing.T) {
 }
 
 func TestECSManager_Instances(t *testing.T) {
-	h := awsutil.NewHandler([]awsutil.Cycle{
+	h := awsutil.NewHandler(t, []awsutil.Cycle{
 		awsutil.Cycle{
 			Request: awsutil.Request{
 				RequestURI: "/",
@@ -182,7 +182,7 @@ func TestECSManager_Instances(t *testing.T) {
 }
 
 func TestECSManager_Remove(t *testing.T) {
-	h := awsutil.NewHandler([]awsutil.Cycle{
+	h := awsutil.NewHandler(t, []awsutil.Cycle{
 		awsutil.Cycle{
 			Request: awsutil.Request{
 				RequestURI: "/",
@@ -252,7 +252,7 @@ func TestECSManager_Remove(t *testing.T) {
 }
 
 func TestECSManager_Processes(t *testing.T) {
-	h := awsutil.NewHandler([]awsutil.Cycle{
+	h := awsutil.NewHandler(t, []awsutil.Cycle{
 		awsutil.Cycle{
 			Request: awsutil.Request{
 				RequestURI: "/",

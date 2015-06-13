@@ -13,7 +13,7 @@ import (
 )
 
 func TestELB_CreateLoadBalancer(t *testing.T) {
-	h := awsutil.NewHandler([]awsutil.Cycle{
+	h := awsutil.NewHandler(t, []awsutil.Cycle{
 		{
 			Request: awsutil.Request{
 				RequestURI: "/",
@@ -63,8 +63,8 @@ func TestELB_CreateLoadBalancer(t *testing.T) {
 	}
 }
 
-func buildLoadBalancerForDestroy() (*ELBManager, *httptest.Server, *LoadBalancer) {
-	h := awsutil.NewHandler([]awsutil.Cycle{
+func buildLoadBalancerForDestroy(t *testing.T) (*ELBManager, *httptest.Server, *LoadBalancer) {
+	h := awsutil.NewHandler(t, []awsutil.Cycle{
 		{
 			Request: awsutil.Request{
 				RequestURI: "/",
@@ -91,7 +91,7 @@ func buildLoadBalancerForDestroy() (*ELBManager, *httptest.Server, *LoadBalancer
 }
 
 func TestELB_DestroyLoadBalancer(t *testing.T) {
-	m, s, lb := buildLoadBalancerForDestroy()
+	m, s, lb := buildLoadBalancerForDestroy(t)
 	defer s.Close()
 
 	if err := m.DestroyLoadBalancer(context.Background(), lb); err != nil {
@@ -100,7 +100,7 @@ func TestELB_DestroyLoadBalancer(t *testing.T) {
 }
 
 func TestELB_LoadBalancers(t *testing.T) {
-	h := awsutil.NewHandler([]awsutil.Cycle{
+	h := awsutil.NewHandler(t, []awsutil.Cycle{
 		{
 			Request: awsutil.Request{
 				RequestURI: "/",
@@ -267,7 +267,7 @@ func TestELB_LoadBalancers(t *testing.T) {
 }
 
 func TestELBwDNS_DestroyLoadBalancer(t *testing.T) {
-	m, s, lb := buildLoadBalancerForDestroy()
+	m, s, lb := buildLoadBalancerForDestroy(t)
 	defer s.Close()
 	ns := newTestNameserver("FAKEZONE")
 

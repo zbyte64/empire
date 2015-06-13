@@ -14,7 +14,7 @@ import (
 )
 
 func TestListAppServices(t *testing.T) {
-	h := awsutil.NewHandler([]awsutil.Cycle{
+	h := awsutil.NewHandler(t, []awsutil.Cycle{
 		awsutil.Cycle{
 			Request: awsutil.Request{
 				RequestURI: "/",
@@ -43,7 +43,7 @@ func TestListAppServices(t *testing.T) {
 }
 
 func TestListAppServices_Pagination(t *testing.T) {
-	h := awsutil.NewHandler([]awsutil.Cycle{
+	h := awsutil.NewHandler(t, []awsutil.Cycle{
 		awsutil.Cycle{
 			Request: awsutil.Request{
 				RequestURI: "/",
@@ -84,7 +84,7 @@ func TestListAppServices_Pagination(t *testing.T) {
 }
 
 func TestListAppTasks(t *testing.T) {
-	h := awsutil.NewHandler([]awsutil.Cycle{
+	h := awsutil.NewHandler(t, []awsutil.Cycle{
 		awsutil.Cycle{
 			Request: awsutil.Request{
 				RequestURI: "/",
@@ -125,7 +125,7 @@ func TestListAppTasks(t *testing.T) {
 }
 
 func TestListAppTasks_Paginate(t *testing.T) {
-	h := awsutil.NewHandler([]awsutil.Cycle{
+	h := awsutil.NewHandler(t, []awsutil.Cycle{
 		awsutil.Cycle{
 			Request: awsutil.Request{
 				RequestURI: "/",

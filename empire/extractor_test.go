@@ -31,7 +31,7 @@ func TestFakeExtractor(t *testing.T) {
 
 func TestCmdExtractor(t *testing.T) {
 	api := httpmock.NewServeReplay(t).Add(httpmock.PathHandler(t,
-		"GET /images/remind101:acme-inc/json",
+		"GET /images/remind101:acme-inc/json", nil,
 		200, `{ "Config": { "Cmd": ["/go/bin/app","server"] } }`,
 	))
 
@@ -61,16 +61,16 @@ func TestCmdExtractor(t *testing.T) {
 
 func TestProcfileExtractor(t *testing.T) {
 	api := httpmock.NewServeReplay(t).Add(httpmock.PathHandler(t,
-		"POST /containers/create",
+		"POST /containers/create", nil,
 		200, `{ "ID": "abc" }`,
 	)).Add(httpmock.PathHandler(t,
-		"GET /containers/abc/json",
+		"GET /containers/abc/json", nil,
 		200, `{}`,
 	)).Add(httpmock.PathHandler(t,
-		"POST /containers/abc/copy",
+		"POST /containers/abc/copy", nil,
 		200, tarProcfile(t),
 	)).Add(httpmock.PathHandler(t,
-		"DELETE /containers/abc",
+		"DELETE /containers/abc", nil,
 		200, `{}`,
 	))
 
@@ -101,19 +101,19 @@ func TestProcfileExtractor(t *testing.T) {
 
 func TestProcfileFallbackExtractor(t *testing.T) {
 	api := httpmock.NewServeReplay(t).Add(httpmock.PathHandler(t,
-		"POST /containers/create",
+		"POST /containers/create", nil,
 		200, `{ "ID": "abc" }`,
 	)).Add(httpmock.PathHandler(t,
-		"GET /containers/abc/json",
+		"GET /containers/abc/json", nil,
 		200, `{}`,
 	)).Add(httpmock.PathHandler(t,
-		"POST /containers/abc/copy",
+		"POST /containers/abc/copy", nil,
 		404, ``,
 	)).Add(httpmock.PathHandler(t,
-		"DELETE /containers/abc",
+		"DELETE /containers/abc", nil,
 		200, `{}`,
 	)).Add(httpmock.PathHandler(t,
-		"GET /images/remind101:acme-inc/json",
+		"GET /images/remind101:acme-inc/json", nil,
 		200, `{ "Config": { "Cmd": ["/go/bin/app","server"] } }`,
 	))
 

@@ -8,6 +8,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"testing"
+
+	"github.com/remind101/empire/empire/pkg/httpmock"
 )
 
 // Request represents an expected AWS API Operation.
@@ -34,50 +37,49 @@ type Cycle struct {
 	Response Response
 }
 
-// Handler is an http.Handler that will play back cycles.
-type Handler struct {
-	cycles []Cycle
-}
-
 // NewHandler returns a new Handler instance.
-func NewHandler(c []Cycle) *Handler {
-	return &Handler{cycles: c}
-}
+func NewHandler(t *testing.T, c []Cycle) http.Handler {
+	m := httpmock.NewServeReplay(t)
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if len(h.cycles) == 0 {
-		fmt.Println("No cycles remaining to replay.")
-		w.WriteHeader(404)
-		return
+	for _, cycle := range c {
+		m.Add(&cycleHandler{t: t, cycle: cycle})
 	}
 
+	return m
+}
+
+// Handler is an http.Handler that will play back a cycle.
+type cycleHandler struct {
+	t     *testing.T
+	cycle Cycle
+}
+
+func (h *cycleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		panic(err)
+		h.t.Fatal(err)
 	}
 
-	cycle := h.cycles[0]
 	match := Request{
 		RequestURI: r.URL.RequestURI(),
 		Operation:  r.Header.Get("X-Amz-Target"),
 		Body:       string(b),
 	}
 
-	if cycle.Request.Body == "ignore" {
-		match.Body = cycle.Request.Body
+	if h.cycle.Request.Body == "ignore" {
+		match.Body = h.cycle.Request.Body
 	}
 
-	if cycle.Request.String() == match.String() {
-		w.WriteHeader(cycle.Response.StatusCode)
-		io.WriteString(w, cycle.Response.Body)
+	if h.cycle.Request.String() == match.String() {
+		w.WriteHeader(h.cycle.Response.StatusCode)
+		io.WriteString(w, h.cycle.Response.Body)
 	} else {
-		fmt.Println("Request does not match next cycle.")
-		fmt.Println(cycle.Request.String())
-		fmt.Println(match.String())
 		w.WriteHeader(404)
+		h.t.Log("Request does not match next cycle.")
+		h.t.Log(h.cycle.Request.String())
+		h.t.Log(match.String())
+		h.t.Fail()
 	}
-
-	h.cycles = h.cycles[1:]
 }
 
 func formatBody(r io.Reader) string {
