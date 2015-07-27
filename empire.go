@@ -9,6 +9,7 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/inconshreveable/log15"
 	"github.com/mattes/migrate/migrate"
+	"github.com/remind101/empire/pkg/docker/puller"
 	"github.com/remind101/empire/pkg/dockerutil"
 	"github.com/remind101/empire/pkg/runner"
 	"github.com/remind101/empire/pkg/service"
@@ -123,7 +124,7 @@ func New(options Options) (*Empire, error) {
 		return nil, err
 	}
 
-	resolver, err := newResolver(options.Docker)
+	puller, err := newPuller(options.Docker)
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +189,7 @@ func New(options Options) (*Empire, error) {
 	slugs := &slugsService{
 		store:     store,
 		extractor: extractor,
-		resolver:  resolver,
+		puller:    puller,
 	}
 
 	deployer := &deployerService{
@@ -460,12 +461,12 @@ func newExtractor(o DockerOptions) (Extractor, error) {
 	return newProcfileFallbackExtractor(c), err
 }
 
-func newResolver(o DockerOptions) (Resolver, error) {
+func newPuller(o DockerOptions) (puller.Puller, error) {
 	if o.Socket == "" {
 		log.Println("warn: docker socket not configured, docker image puller disabled.")
-		return &fakeResolver{}, nil
+		return puller.FakePuller, nil
 	}
 
 	c, err := dockerutil.NewClient(o.Auth, o.Socket, o.CertPath)
-	return newDockerResolver(c), err
+	return puller.NewDockerPuller(c), err
 }

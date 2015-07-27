@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/jinzhu/gorm"
+	"github.com/remind101/empire/pkg/docker/puller"
 	"github.com/remind101/empire/pkg/image"
 	"golang.org/x/net/context"
 )
@@ -29,20 +30,19 @@ func slugsCreate(db *gorm.DB, slug *Slug) (*Slug, error) {
 type slugsService struct {
 	store     *store
 	extractor Extractor
-	resolver  Resolver
+	puller    puller.Puller
 }
 
 // SlugsCreateByImage creates a Slug for the given image.
 func (s *slugsService) SlugsCreateByImage(ctx context.Context, img image.Image, out io.Writer) (*Slug, error) {
-	return slugsCreateByImage(ctx, s.store, s.extractor, s.resolver, img, out)
+	return slugsCreateByImage(ctx, s.store, s.extractor, s.puller, img, out)
 }
 
 // SlugsCreateByImage first attempts to find a matching slug for the image. If
 // it's not found, it will fallback to extracting the process types using the
 // provided extractor, then create a slug.
-func slugsCreateByImage(ctx context.Context, store *store, e Extractor, r Resolver, img image.Image, out io.Writer) (*Slug, error) {
-	_, err := r.Resolve(ctx, img, out)
-	if err != nil {
+func slugsCreateByImage(ctx context.Context, store *store, e Extractor, p puller.Puller, img image.Image, out io.Writer) (*Slug, error) {
+	if err := p.Pull(ctx, img, out); err != nil {
 		return nil, err
 	}
 
