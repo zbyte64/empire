@@ -3,6 +3,7 @@ package empire // import "github.com/remind101/empire"
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/docker/docker/pkg/jsonmessage"
@@ -468,5 +469,12 @@ func newPuller(o DockerOptions) (puller.Puller, error) {
 	}
 
 	c, err := dockerutil.NewClient(o.Auth, o.Socket, o.CertPath)
-	return puller.NewDockerPuller(c), err
+	p := puller.Retry(
+		puller.NewDockerPuller(c),
+		puller.RetryOptions{
+			Max:      100,
+			Deadline: 10 * time.Minute,
+		},
+	)
+	return p, err
 }

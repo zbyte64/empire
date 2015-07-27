@@ -77,15 +77,70 @@ var FakePuller = PullerFunc(func(ctx context.Context, img image.Image, w io.Writ
 })
 
 type RetryOptions struct {
-	// The number of times to retry.
-	Times int
-	// The maximum duration to wait until failing.
+	// The maximum number of times to retry.
+	Max int
+	// The maximum duration to wait until failing. The zero value means no
+	// deadline.
 	Deadline time.Duration
+	// Initialal duration to wait before starting the next pull. This
+	// increases exponentially. The zero value is 1 second.
+	Wait time.Duration
 }
 
 // Retry wraps another puller implementation that will retry if the image is not
 // found.
 func Retry(p Puller, opts RetryOptions) Puller {
-	// TODO
-	return p
+	if opts.Wait == 0 {
+		opts.Wait = 1 * time.Second
+	}
+
+	return PullerFunc(func(ctx context.Context, img image.Image, w io.Writer) error {
+		var (
+			enc = json.NewEncoder(w)
+
+			// Number of times we've retried.
+			retried int
+			// Last error returned
+			err error
+			// Amount of time to wait. Starts at 1 second -> 2 -> 4
+			// -> 8 -> etc.
+			wait     = opts.Wait
+			deadline = time.After(opts.Deadline)
+		)
+
+		for {
+			waitCh := time.After(wait)
+
+			select {
+			case <-deadline:
+				if opts.Deadline != 0 {
+					// Deadline reached.
+					break
+				}
+			case <-waitCh:
+				wait = wait * 2
+			}
+
+			if opts.Max != 0 && retried >= opts.Max {
+				// We've retried to the maximum number of
+				// retries, so return the error.
+				break
+			}
+
+			err = p.Pull(ctx, img, w)
+
+			if err != nil {
+				// Add a status message to the stream.
+				enc.Encode(&jsonmessage.JSONMessage{
+					Status: fmt.Sprintf("%v. Retrying in %v", err.Error(), wait),
+				})
+			}
+
+			retried += 1
+
+			continue
+		}
+
+		return err
+	})
 }
