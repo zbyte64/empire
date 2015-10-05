@@ -11,6 +11,7 @@ import (
 	"github.com/lib/pq/hstore"
 	. "github.com/remind101/empire/pkg/bytesize"
 	"github.com/remind101/empire/pkg/constraints"
+	"github.com/remind101/empire/procfile"
 	"github.com/remind101/empire/scheduler"
 	"golang.org/x/net/context"
 )
@@ -193,14 +194,14 @@ type Formation map[ProcessType]*Process
 
 // NewFormation creates a new Formation based on an existing Formation and
 // the available processes from a CommandMap.
-func NewFormation(f Formation, cm CommandMap) Formation {
+func NewFormation(f Formation, pfile procfile.Procfile) Formation {
 	processes := make(Formation)
 
 	// Iterate through all of the available process types in the CommandMap.
-	for t, cmd := range cm {
-		p := NewProcess(t, cmd)
+	for t, pd := range pfile {
+		p := NewProcess(ProcessType(t), Command(pd.Command))
 
-		if existing, found := f[t]; found {
+		if existing, found := f[ProcessType(t)]; found {
 			// If the existing Formation already had a process
 			// configuration for this process type, copy over the
 			// instance count.
@@ -208,7 +209,7 @@ func NewFormation(f Formation, cm CommandMap) Formation {
 			p.Constraints = existing.Constraints
 		}
 
-		processes[t] = p
+		processes[ProcessType(t)] = p
 	}
 
 	return processes

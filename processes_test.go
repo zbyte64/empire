@@ -8,6 +8,7 @@ import (
 
 	. "github.com/remind101/empire/pkg/bytesize"
 	"github.com/remind101/empire/pkg/constraints"
+	"github.com/remind101/empire/procfile"
 )
 
 func TestProcessesQuery(t *testing.T) {
@@ -23,16 +24,18 @@ func TestProcessesQuery(t *testing.T) {
 
 func TestNewFormation(t *testing.T) {
 	tests := []struct {
-		f  Formation
-		cm CommandMap
+		f        Formation
+		procfile procfile.Procfile
 
 		expected Formation
 	}{
 
 		{
 			f: nil,
-			cm: CommandMap{
-				"web": "./bin/web",
+			procfile: procfile.Procfile{
+				"web": procfile.ProcessDefinition{
+					Command: "./bin/web",
+				},
 			},
 			expected: Formation{
 				"web": &Process{
@@ -46,8 +49,10 @@ func TestNewFormation(t *testing.T) {
 
 		{
 			f: Formation{},
-			cm: CommandMap{
-				"web": "./bin/web",
+			procfile: procfile.Procfile{
+				"web": procfile.ProcessDefinition{
+					Command: "./bin/web",
+				},
 			},
 			expected: Formation{
 				"web": &Process{
@@ -61,8 +66,10 @@ func TestNewFormation(t *testing.T) {
 
 		{
 			f: Formation{},
-			cm: CommandMap{
-				"worker": "sidekiq",
+			procfile: procfile.Procfile{
+				"worker": procfile.ProcessDefinition{
+					Command: "sidekiq",
+				},
 			},
 			expected: Formation{
 				"worker": &Process{
@@ -89,8 +96,10 @@ func TestNewFormation(t *testing.T) {
 					Constraints: NamedConstraints["1X"],
 				},
 			},
-			cm: CommandMap{
-				"web": "./bin/web",
+			procfile: procfile.Procfile{
+				"web": procfile.ProcessDefinition{
+					Command: "./bin/web",
+				},
 			},
 			expected: Formation{
 				"web": &Process{
@@ -104,7 +113,7 @@ func TestNewFormation(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		f := NewFormation(tt.f, tt.cm)
+		f := NewFormation(tt.f, tt.procfile)
 
 		if got, want := f, tt.expected; !reflect.DeepEqual(got, want) {
 			t.Fatalf("%d processes => %v; want %v", i, got, want)

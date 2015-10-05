@@ -1,4 +1,4 @@
-.PHONY: cmd build test bootstrap
+.PHONY: cmd build test bootstrap db
 
 REPO = remind101/empire
 TYPE = patch
@@ -6,9 +6,12 @@ TYPE = patch
 cmd:
 	godep go build -o build/empire ./cmd/empire
 
-bootstrap: cmd build/emp
+bootstrap: db migrate
+
+db: migrations/*.sql
+	dropdb empire || true
 	createdb empire
-	./build/empire migrate
+	migrate -url postgres://localhost/empire?sslmode=disable -path ./migrations up
 
 build: Dockerfile
 	docker build -t ${REPO} .

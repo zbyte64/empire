@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/docker/docker/pkg/jsonmessage"
@@ -11,6 +12,7 @@ import (
 	"github.com/inconshreveable/log15"
 	"github.com/mattes/migrate/migrate"
 	"github.com/remind101/empire/pkg/dockerutil"
+	"github.com/remind101/empire/pkg/image"
 	"github.com/remind101/empire/pkg/runner"
 	"github.com/remind101/empire/pkg/sslcert"
 	"github.com/remind101/empire/scheduler"
@@ -124,16 +126,6 @@ func New(options Options) (*Empire, error) {
 
 	store := &store{db: db}
 
-	extractor, err := newExtractor(options.Docker)
-	if err != nil {
-		return nil, err
-	}
-
-	resolver, err := newResolver(options.Docker)
-	if err != nil {
-		return nil, err
-	}
-
 	runner, err := newRunner(options.Docker)
 	if err != nil {
 		return nil, err
@@ -192,9 +184,12 @@ func New(options Options) (*Empire, error) {
 	}
 
 	slugs := &slugsService{
-		store:     store,
-		extractor: extractor,
-		resolver:  resolver,
+		store: store,
+		extractProcfile: func(img image.Image, w io.Writer) io.Reader {
+			FakeDockerPull(img, w)
+			return strings.NewReader(`---
+web: ./bin/web`)
+		},
 	}
 
 	deployer := &deployerService{
@@ -464,26 +459,6 @@ func newLogger() log15.Logger {
 	//h = log15.CallerStackHandler("%+n", h)
 	l.SetHandler(log15.LazyHandler(h))
 	return l
-}
-
-func newExtractor(o DockerOptions) (Extractor, error) {
-	if o.Socket == "" {
-		log.Println("warn: docker socket not configured, docker command extractor disabled.")
-		return &fakeExtractor{}, nil
-	}
-
-	c, err := dockerutil.NewDockerClient(o.Socket, o.CertPath)
-	return newProcfileFallbackExtractor(c), err
-}
-
-func newResolver(o DockerOptions) (Resolver, error) {
-	if o.Socket == "" {
-		log.Println("warn: docker socket not configured, docker image puller disabled.")
-		return &fakeResolver{}, nil
-	}
-
-	c, err := dockerutil.NewClient(o.Auth, o.Socket, o.CertPath)
-	return newDockerResolver(c), err
 }
 
 func newLogStreamer(logsStreamer string) LogsStreamer {

@@ -173,7 +173,12 @@ func (s *releasesService) createFormation(release *Release) error {
 		existing = last.Formation()
 	}
 
-	f := NewFormation(existing, release.Slug.ProcessTypes)
+	pfile, err := release.Slug.Procfile()
+	if err != nil {
+		return err
+	}
+
+	f := NewFormation(existing, pfile)
 	release.Processes = f.Processes()
 
 	return nil
