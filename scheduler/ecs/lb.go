@@ -72,18 +72,18 @@ func (m *LBProcessManager) RemoveProcess(ctx context.Context, app string, p stri
 		return err
 	}
 
-	l, err := m.findLoadBalancer(ctx, app, p)
-	if err != nil {
-		// TODO: Maybe we shouldn't care here.
-		return err
-	}
+	// l, err := m.findLoadBalancer(ctx, app, p)
+	// if err != nil {
+	// 	// TODO: Maybe we shouldn't care here.
+	// 	return err
+	// }
 
-	if l != nil {
-		if err := m.lb.DestroyLoadBalancer(ctx, l); err != nil {
-			// TODO: Maybe we shouldn't care here.
-			return err
-		}
-	}
+	// if l != nil {
+	// 	if err := m.lb.DestroyLoadBalancer(ctx, l); err != nil {
+	// 		// TODO: Maybe we shouldn't care here.
+	// 		return err
+	// 	}
+	// }
 
 	return nil
 }
