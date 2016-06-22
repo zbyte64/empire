@@ -26,6 +26,7 @@ import (
 	"github.com/remind101/empire/pkg/runner"
 	"github.com/remind101/empire/scheduler"
 	"github.com/remind101/empire/scheduler/cloudformation"
+	"github.com/remind101/empire/scheduler/docker"
 	"github.com/remind101/empire/scheduler/ecs"
 	"github.com/remind101/pkg/logger"
 	"github.com/remind101/pkg/reporter"
@@ -118,6 +119,8 @@ func newScheduler(db *empire.DB, c *cli.Context) (scheduler.Scheduler, error) {
 		s, err = newMigrationScheduler(db, c)
 	case "cloudformation":
 		s, err = newCloudFormationScheduler(db, c)
+	case "docker":
+		s, err = newDockerScheduler()
 	default:
 		return nil, fmt.Errorf("unknown scheduler: %s", c.String(FlagScheduler))
 	}
@@ -126,6 +129,10 @@ func newScheduler(db *empire.DB, c *cli.Context) (scheduler.Scheduler, error) {
 		Scheduler: s,
 		Runner:    r,
 	}, nil
+}
+
+func newDockerScheduler() (*docker.Scheduler, error) {
+	return docker.NewEnv()
 }
 
 func newMigrationScheduler(db *empire.DB, c *cli.Context) (*cloudformation.MigrationScheduler, error) {
