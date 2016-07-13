@@ -83,7 +83,14 @@
       },
       "Type": "AWS::Route53::RecordSet"
     },
-    "api8080InstancePort": {
+    "api443To8080InstancePort": {
+      "Properties": {
+        "ServiceToken": "sns topic arn"
+      },
+      "Type": "Custom::InstancePort",
+      "Version": "1.0"
+    },
+    "api80To8080InstancePort": {
       "Properties": {
         "ServiceToken": "sns topic arn"
       },
@@ -101,7 +108,7 @@
           {
             "InstancePort": {
               "Fn::GetAtt": [
-                "api8080InstancePort",
+                "api80To8080InstancePort",
                 "InstancePort"
               ]
             },
@@ -112,7 +119,7 @@
           {
             "InstancePort": {
               "Fn::GetAtt": [
-                "api8080InstancePort",
+                "api443To8080InstancePort",
                 "InstancePort"
               ]
             },
@@ -188,12 +195,7 @@
                 "Ref": "RestartKey"
               }
             },
-            "Environment": [
-              {
-                "Name": "PORT",
-                "Value": "8080"
-              }
-            ],
+            "Environment": [],
             "Essential": true,
             "Image": "",
             "Memory": 0,
@@ -203,7 +205,16 @@
                 "ContainerPort": 8080,
                 "HostPort": {
                   "Fn::GetAtt": [
-                    "api8080InstancePort",
+                    "api80To8080InstancePort",
+                    "InstancePort"
+                  ]
+                }
+              },
+              {
+                "ContainerPort": 8080,
+                "HostPort": {
+                  "Fn::GetAtt": [
+                    "api443To8080InstancePort",
                     "InstancePort"
                   ]
                 }
@@ -216,7 +227,14 @@
       },
       "Type": "AWS::ECS::TaskDefinition"
     },
-    "web8080InstancePort": {
+    "web443To8080InstancePort": {
+      "Properties": {
+        "ServiceToken": "sns topic arn"
+      },
+      "Type": "Custom::InstancePort",
+      "Version": "1.0"
+    },
+    "web80To8080InstancePort": {
       "Properties": {
         "ServiceToken": "sns topic arn"
       },
@@ -234,7 +252,7 @@
           {
             "InstancePort": {
               "Fn::GetAtt": [
-                "web8080InstancePort",
+                "web80To8080InstancePort",
                 "InstancePort"
               ]
             },
@@ -245,7 +263,7 @@
           {
             "InstancePort": {
               "Fn::GetAtt": [
-                "web8080InstancePort",
+                "web443To8080InstancePort",
                 "InstancePort"
               ]
             },
@@ -309,12 +327,7 @@
                 "Ref": "RestartKey"
               }
             },
-            "Environment": [
-              {
-                "Name": "PORT",
-                "Value": "8080"
-              }
-            ],
+            "Environment": [],
             "Essential": true,
             "Image": "",
             "Memory": 0,
@@ -324,7 +337,16 @@
                 "ContainerPort": 8080,
                 "HostPort": {
                   "Fn::GetAtt": [
-                    "web8080InstancePort",
+                    "web80To8080InstancePort",
+                    "InstancePort"
+                  ]
+                }
+              },
+              {
+                "ContainerPort": 8080,
+                "HostPort": {
+                  "Fn::GetAtt": [
+                    "web443To8080InstancePort",
                     "InstancePort"
                   ]
                 }

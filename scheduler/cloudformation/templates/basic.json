@@ -83,7 +83,7 @@
       },
       "Type": "AWS::Route53::RecordSet"
     },
-    "web8080InstancePort": {
+    "web80To8080InstancePort": {
       "Properties": {
         "ServiceToken": "sns topic arn"
       },
@@ -101,7 +101,7 @@
           {
             "InstancePort": {
               "Fn::GetAtt": [
-                "web8080InstancePort",
+                "web80To8080InstancePort",
                 "InstancePort"
               ]
             },
@@ -177,10 +177,6 @@
               {
                 "Name": "C",
                 "Value": "foo"
-              },
-              {
-                "Name": "PORT",
-                "Value": "8080"
               }
             ],
             "Essential": true,
@@ -192,7 +188,7 @@
                 "ContainerPort": 8080,
                 "HostPort": {
                   "Fn::GetAtt": [
-                    "web8080InstancePort",
+                    "web80To8080InstancePort",
                     "InstancePort"
                   ]
                 }

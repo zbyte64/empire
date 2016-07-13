@@ -29,12 +29,6 @@ var (
 )
 
 const (
-	// For HTTP/HTTPS/TCP services, we allocate an ELB and map it's instance port to
-	// the container port. This is the port that processes within the container
-	// should bind to. This value is also exposed to the container through the PORT
-	// environment variable.
-	ContainerPort = 8080
-
 	schemeInternal = "internal"
 	schemeExternal = "internet-facing"
 
@@ -265,54 +259,80 @@ func (t *EmpireTemplate) addService(tmpl *troposphere.Template, app *scheduler.A
 			subnets = t.ExternalSubnetIDs
 		}
 
-		instancePort := fmt.Sprintf("%s%dInstancePort", key, ContainerPort)
-		tmpl.Resources[instancePort] = troposphere.Resource{
-			Type:    "Custom::InstancePort",
-			Version: "1.0",
-			Properties: map[string]interface{}{
-				"ServiceToken": t.CustomResourcesTopic,
-			},
-		}
+		listeners := []map[string]interface{}{}
 
-		listeners := []map[string]interface{}{
-			map[string]interface{}{
-				"LoadBalancerPort": 80,
-				"Protocol":         "http",
-				"InstancePort":     GetAtt(instancePort, "InstancePort"),
-				"InstanceProtocol": "http",
-			},
-		}
-
-		if e, ok := p.Exposure.Type.(*scheduler.HTTPSExposure); ok {
-			var cert interface{}
-			if _, err := arn.Parse(e.Cert); err == nil {
-				cert = e.Cert
-			} else {
-				cert = Join("", "arn:aws:iam::", Ref("AWS::AccountId"), ":server-certificate/", e.Cert)
+		for _, port := range p.Exposure.Ports {
+			instancePort := fmt.Sprintf("%s%dTo%dInstancePort", key, port.Host, port.Container)
+			tmpl.Resources[instancePort] = troposphere.Resource{
+				Type:    "Custom::InstancePort",
+				Version: "1.0",
+				Properties: map[string]interface{}{
+					"ServiceToken": t.CustomResourcesTopic,
+				},
 			}
-
-			listeners = append(listeners, map[string]interface{}{
-				"LoadBalancerPort": 443,
-				"Protocol":         "https",
-				"InstancePort":     GetAtt(instancePort, "InstancePort"),
-				"SSLCertificateId": cert,
-				"InstanceProtocol": "http",
+			portMappings = append(portMappings, map[string]interface{}{
+				"ContainerPort": port.Container,
+				"HostPort":      GetAtt(instancePort, "InstancePort"),
 			})
-		}
 
-		portMappings = append(portMappings, map[string]interface{}{
-			"ContainerPort": ContainerPort,
-			"HostPort":      GetAtt(instancePort, "InstancePort"),
-		})
-		cd.Environment = append(cd.Environment, &ecs.KeyValuePair{
-			Name:  aws.String("PORT"),
-			Value: aws.String(fmt.Sprintf("%d", ContainerPort)),
-		})
+			switch e := port.Protocol.(type) {
+			case *scheduler.TCP:
+				listeners = append(listeners, map[string]interface{}{
+					"LoadBalancerPort": port.Host,
+					"Protocol":         "tcp",
+					"InstancePort":     GetAtt(instancePort, "InstancePort"),
+					"InstanceProtocol": "tcp",
+				})
+			case *scheduler.SSL:
+				var cert interface{}
+				if _, err := arn.Parse(e.Cert); err == nil {
+					cert = e.Cert
+				} else {
+					cert = Join("", "arn:aws:iam::", Ref("AWS::AccountId"), ":server-certificate/", e.Cert)
+				}
+
+				listeners = append(listeners, map[string]interface{}{
+					"LoadBalancerPort": port.Host,
+					"Protocol":         "ssl",
+					"InstancePort":     GetAtt(instancePort, "InstancePort"),
+					"SSLCertificateId": cert,
+					"InstanceProtocol": "tcp",
+				})
+			case *scheduler.HTTP:
+				listeners = append(listeners, map[string]interface{}{
+					"LoadBalancerPort": port.Host,
+					"Protocol":         "http",
+					"InstancePort":     GetAtt(instancePort, "InstancePort"),
+					"InstanceProtocol": "http",
+				})
+			case *scheduler.HTTPS:
+				var cert interface{}
+				if _, err := arn.Parse(e.Cert); err == nil {
+					cert = e.Cert
+				} else {
+					cert = Join("", "arn:aws:iam::", Ref("AWS::AccountId"), ":server-certificate/", e.Cert)
+				}
+
+				listeners = append(listeners, map[string]interface{}{
+					"LoadBalancerPort": port.Host,
+					"Protocol":         "https",
+					"InstancePort":     GetAtt(instancePort, "InstancePort"),
+					"SSLCertificateId": cert,
+					"InstanceProtocol": "http",
+				})
+			}
+		}
 
 		loadBalancer := fmt.Sprintf("%sLoadBalancer", key)
+		// The ECS API requires that we provide a container name and
+		// container port, but it will map all of the load balancer
+		// listeners to the container. We just set this to the first
+		// container port to appease the API.
+		containerPort := p.Exposure.Ports[0].Container
+
 		loadBalancers = append(loadBalancers, map[string]interface{}{
 			"ContainerName":    p.Type,
-			"ContainerPort":    ContainerPort,
+			"ContainerPort":    containerPort,
 			"LoadBalancerName": Ref(loadBalancer),
 		})
 		tmpl.Resources[loadBalancer] = troposphere.Resource{

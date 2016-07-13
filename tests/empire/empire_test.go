@@ -135,7 +135,13 @@ func TestEmpire_Deploy(t *testing.T) {
 				Image:   img,
 				Command: []string{"./bin/web"},
 				Exposure: &scheduler.Exposure{
-					Type: &scheduler.HTTPExposure{},
+					Ports: []scheduler.Port{
+						{
+							Container: 8080,
+							Host:      80,
+							Protocol:  &scheduler.HTTP{},
+						},
+					},
 				},
 				Instances:   1,
 				MemoryLimit: 536870912,
@@ -144,6 +150,7 @@ func TestEmpire_Deploy(t *testing.T) {
 				Env: map[string]string{
 					"EMPIRE_PROCESS": "web",
 					"SOURCE":         "acme-inc.web.v1",
+					"PORT":           "8080",
 				},
 				Labels: map[string]string{
 					"empire.app.process": "web",
@@ -475,7 +482,13 @@ func TestEmpire_Set(t *testing.T) {
 				Image:   img,
 				Command: []string{"./bin/web"},
 				Exposure: &scheduler.Exposure{
-					Type: &scheduler.HTTPExposure{},
+					Ports: []scheduler.Port{
+						{
+							Container: 8080,
+							Host:      80,
+							Protocol:  &scheduler.HTTP{},
+						},
+					},
 				},
 				Instances:   1,
 				MemoryLimit: 536870912,
@@ -484,6 +497,7 @@ func TestEmpire_Set(t *testing.T) {
 				Env: map[string]string{
 					"EMPIRE_PROCESS": "web",
 					"SOURCE":         "acme-inc.web.v1",
+					"PORT":           "8080",
 				},
 				Labels: map[string]string{
 					"empire.app.process": "web",
@@ -521,7 +535,13 @@ func TestEmpire_Set(t *testing.T) {
 				Image:   img,
 				Command: []string{"./bin/web"},
 				Exposure: &scheduler.Exposure{
-					Type: &scheduler.HTTPExposure{},
+					Ports: []scheduler.Port{
+						{
+							Container: 8080,
+							Host:      80,
+							Protocol:  &scheduler.HTTP{},
+						},
+					},
 				},
 				Instances:   1,
 				MemoryLimit: 536870912,
@@ -530,6 +550,7 @@ func TestEmpire_Set(t *testing.T) {
 				Env: map[string]string{
 					"EMPIRE_PROCESS": "web",
 					"SOURCE":         "acme-inc.web.v2",
+					"PORT":           "8080",
 				},
 				Labels: map[string]string{
 					"empire.app.process": "web",

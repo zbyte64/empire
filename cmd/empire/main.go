@@ -87,7 +87,7 @@ var Commands = []cli.Command{
 			},
 			cli.StringFlag{
 				Name:   FlagScheduler,
-				Value:  "ecs",
+				Value:  "cloudformation",
 				Usage:  "The scheduling backend to use. Current options are `ecs`, `cloudformation-migration`, and `cloudformation`.",
 				EnvVar: "EMPIRE_SCHEDULER",
 			},

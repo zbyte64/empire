@@ -85,6 +85,15 @@ type Process struct {
 	// A cron expression. If provided, the process will be run as a
 	// scheduled task.
 	Cron *string `json:"cron,omitempty"`
+
+	// Port mappings from container to load balancer.
+	Ports []Port `json:"Ports,omitempty"`
+}
+
+type Port struct {
+	Host      int    `json:"Host"`
+	Container int    `json:"Container"`
+	Protocol  string `json:"Protocol"`
 }
 
 // Constraints returns a constraints.Constraints from this Process definition.
