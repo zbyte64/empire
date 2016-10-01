@@ -165,7 +165,8 @@ func runEnvLoad(cmd *Command, args []string) {
 	must(err)
 
 	config := make(map[string]*string)
-	for key, value := range parsedVars {
+	for key, _ := range parsedVars {
+		value := parsedVars[key]
 		config[key] = &value
 	}
 
